@@ -98,6 +98,15 @@ export const AREAS = [
     contexto: "Área de servicio al cliente. Maneja garantías, quejas, reclamos y coordinación post-venta.",
     intel: "Carlos la describió como el área que escucha y gestiona todo lo post-venta: garantías, productos que no llegan completos o en mal estado, coordinación de entregas. Es un área reactiva hoy. Potencial alto en automatización de respuestas, clasificación de PQRS, seguimiento de casos y reducción de tiempos de resolución.",
   },
+  {
+    id: "presidencia",
+    nombre: "Presidencia",
+    emoji: "🏛️",
+    cargos: ["Presidente", "Vicepresidente", "Asistente de Presidencia", "Chief of Staff", "Gerente General"],
+    retos: ["Toma de decisiones estratégicas", "Síntesis de información ejecutiva", "Comunicación con junta directiva", "Planeación estratégica", "Transformación digital", "Gobierno corporativo"],
+    contexto: "Oficina de la presidencia de Tugó. Lidera la dirección estratégica de la compañía y la toma de decisiones a nivel ejecutivo.",
+    intel: "La presidencia es el patrocinador final de la iniciativa de transformación IA. El presidente tiene visión de hacia dónde va la empresa y necesita herramientas para procesar información ejecutiva más rápido, comunicar la estrategia IA a la junta y liderar con ejemplo el cambio cultural. El programa más alineado es AI for Executives, que les da el marco de gobernanza, casos de uso estratégicos y lenguaje ejecutivo para liderar la adopción de IA en toda la organización.",
+  },
 ] as const;
 
 export type AreaId = typeof AREAS[number]["id"];
