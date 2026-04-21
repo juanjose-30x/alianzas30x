@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronDown, ChevronUp, ArrowRight, AlertCircle, Zap,
   ExternalLink, Quote, MessageSquare, Send, Loader2, X,
-  Bot, CheckCircle2, Copy, Check, Edit3, FileText
+  Bot, CheckCircle2, Copy, Check, Edit3, FileText, BookOpen
 } from 'lucide-react'
 import type { Submission } from '@/lib/supabase'
 
@@ -55,6 +55,7 @@ type Props = {
   recommendedPrograms: Program[]
   areaSections: AreaSection[]
   herramientaData: HerramientaItem[]
+  areasIntel: Record<string, string>
 }
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -523,6 +524,104 @@ function AreaChatPanel({
   )
 }
 
+// ─── BRIEF MODAL ─────────────────────────────────────────────────────────────
+
+function BriefModal({
+  submissions,
+  areaSections,
+  areaStates,
+  areasIntel,
+  onClose,
+}: {
+  submissions: Submission[]
+  areaSections: AreaSection[]
+  areaStates: Record<string, AreaState>
+  areasIntel: Record<string, string>
+  onClose: () => void
+}) {
+  const [brief, setBrief] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    const areaConversations = Object.fromEntries(
+      Object.entries(areaStates).map(([id, state]) => [id, state.messages])
+    )
+    fetch('/api/propuesta/brief', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        submissions,
+        areaSections: areaSections.map(s => ({ area: s.area, totalHeadcount: s.totalHeadcount })),
+        areaConversations,
+        areasIntel,
+      }),
+    })
+      .then(r => r.json())
+      .then(d => { setBrief(d.brief ?? d.error ?? 'Error generando brief'); setLoading(false) })
+      .catch(() => { setBrief('Error al generar el brief.'); setLoading(false) })
+  }, [])
+
+  const copy = () => {
+    if (!brief) return
+    navigator.clipboard.writeText(brief)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
+      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-3xl rounded-3xl flex flex-col overflow-hidden"
+        style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', maxHeight: '90vh' }}>
+
+        <div className="flex items-center justify-between px-6 py-4 shrink-0"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center gap-3">
+            <BookOpen size={18} style={{ color: '#C084FC' }} />
+            <h2 className="text-white font-bold text-base" style={{ fontFamily: 'Inter Tight, sans-serif' }}>
+              Brief de conversación · Tugó
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {!loading && brief && (
+              <button onClick={copy}
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all"
+                style={{ background: '#C084FC', color: '#0a0a0a', fontFamily: 'Inter Tight' }}>
+                {copied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar</>}
+              </button>
+            )}
+            <button onClick={onClose} className="text-white/30 hover:text-white/60 transition-colors ml-1">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <Loader2 size={28} className="animate-spin" style={{ color: '#C084FC' }} />
+              <p className="text-white/40 text-sm">Analizando diagnósticos y preparando brief...</p>
+              <p className="text-white/20 text-xs">Esto toma 15–30 segundos</p>
+            </div>
+          ) : (
+            <pre className="text-white/75 text-xs leading-relaxed whitespace-pre-wrap font-mono">
+              {brief}
+            </pre>
+          )}
+        </div>
+
+        <div className="px-6 py-4 shrink-0 text-center" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+          <p className="text-white/25 text-xs">
+            Usa este brief para preparar tu conversación con cada líder de Tugó. No forma parte de la propuesta.
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 // ─── PROPOSAL EXPORT MODAL ───────────────────────────────────────────────────
 
 function ProposalModal({
@@ -597,6 +696,7 @@ export default function ProposalView({
   noToolCount,
   areaSections,
   herramientaData,
+  areasIntel,
 }: Props) {
   const [expandedArea, setExpandedArea] = useState<string | null>(areaSections[0]?.area.id ?? null)
   const [chatArea, setChatArea] = useState<string | null>(null)
@@ -604,6 +704,7 @@ export default function ProposalView({
     Object.fromEntries(areaSections.map(s => [s.area.id, { messages: [], status: 'pending' as AreaStatus }]))
   )
   const [showProposal, setShowProposal] = useState(false)
+  const [showBrief, setShowBrief] = useState(false)
 
   const toolMap = Object.fromEntries(herramientaData.map(h => [h.id, h]))
   const activeChatSection = areaSections.find(s => s.area.id === chatArea) ?? null
@@ -657,6 +758,15 @@ export default function ProposalView({
               </div>
               <span className="text-white/40 text-xs">{doneCount}/{totalCount} áreas</span>
             </div>
+            {/* Brief button */}
+            <button
+              onClick={() => setShowBrief(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all"
+              style={{ background: 'rgba(192,132,252,0.12)', color: '#C084FC', border: '1px solid rgba(192,132,252,0.25)' }}
+            >
+              <BookOpen size={13} />
+              Brief
+            </button>
             {/* Generate button */}
             <button
               onClick={() => setShowProposal(true)}
@@ -1042,6 +1152,19 @@ export default function ProposalView({
             areaSections={areaSections}
             areaStates={areaStates}
             onClose={() => setShowProposal(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* BRIEF MODAL */}
+      <AnimatePresence>
+        {showBrief && (
+          <BriefModal
+            submissions={submissions}
+            areaSections={areaSections}
+            areaStates={areaStates}
+            areasIntel={areasIntel}
+            onClose={() => setShowBrief(false)}
           />
         )}
       </AnimatePresence>

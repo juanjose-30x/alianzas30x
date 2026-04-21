@@ -140,6 +140,10 @@ export default async function PropuestaPage() {
 
   const herramientaData = HERRAMIENTAS_IA as unknown as { id: string; nombre: string; emoji: string; color: string }[]
 
+  const areasIntel = Object.fromEntries(
+    AREAS.map(a => [a.id, (a as unknown as { intel?: string }).intel ?? ''])
+  )
+
   return (
     <ProposalView
       submissions={submissions}
@@ -151,6 +155,7 @@ export default async function PropuestaPage() {
       recommendedPrograms={recommendedPrograms}
       areaSections={areaSections}
       herramientaData={herramientaData}
+      areasIntel={areasIntel}
     />
   )
 }
