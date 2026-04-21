@@ -728,6 +728,42 @@ export default function ProposalView({
           </div>
         </section>
 
+        {/* RESUMEN DE PROPUESTA (se llena conforme se confirman áreas) */}
+        {doneCount > 0 && (
+          <section className="px-6 pb-8 max-w-4xl mx-auto">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Inter Tight, sans-serif' }}>Propuesta en construcción</h2>
+              <p className="text-white/30 text-sm mt-0.5">{doneCount} de {totalCount} áreas confirmadas · {areaSections.filter(s => areaStates[s.area.id]?.status === 'done').reduce((a, s) => a + (areaStates[s.area.id]?.extract?.cupos ?? 0), 0)} cupos · USD ${areaSections.filter(s => areaStates[s.area.id]?.status === 'done').reduce((a, s) => a + (areaStates[s.area.id]?.extract?.cupos ?? 0) * (areaStates[s.area.id]?.extract?.precioUSD ?? 0), 0).toLocaleString()}</p>
+            </div>
+            <div className="space-y-3">
+              {areaSections.filter(s => areaStates[s.area.id]?.status === 'done' && areaStates[s.area.id]?.extract).map(section => {
+                const ext = areaStates[section.area.id]!.extract!
+                const subtotal = ext.cupos * ext.precioUSD
+                return (
+                  <div key={section.area.id} className="rounded-2xl p-5 space-y-3"
+                    style={{ background: 'rgba(52,211,153,0.03)', border: '1px solid rgba(52,211,153,0.15)' }}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{section.area.emoji}</span>
+                        <div>
+                          <p className="text-white font-bold text-sm" style={{ fontFamily: 'Inter Tight, sans-serif' }}>{section.area.nombre}</p>
+                          <p className="text-sm font-semibold" style={{ color: '#34D399' }}>{ext.programaNombre}</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-white/50 text-xs">{ext.cupos} cupos · ${ext.precioUSD.toLocaleString()}/c</p>
+                        <p className="font-bold text-sm" style={{ color: '#E9FF7B', fontFamily: 'Inter Tight' }}>${subtotal.toLocaleString()} USD</p>
+                      </div>
+                    </div>
+                    <p className="text-white/40 text-xs italic border-l-2 pl-3" style={{ borderColor: 'rgba(233,255,123,0.3)' }}>"{ext.hook}"</p>
+                    <p className="text-white/60 text-sm leading-relaxed">{ext.programaJustificacion}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
         {/* ÁREAS */}
         <section className="px-6 pb-14 max-w-4xl mx-auto">
           <div className="mb-5">
