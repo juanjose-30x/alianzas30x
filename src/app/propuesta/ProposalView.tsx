@@ -70,59 +70,99 @@ const TRM = 3600
 function buildProposalText(areaSections: AreaSection[], areaStates: Record<string, AreaState>): string {
   const doneAreas = areaSections.filter(s => areaStates[s.area.id]?.status === 'done' && areaStates[s.area.id]?.extract)
   const date = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long' })
-
-  let text = `PROPUESTA COMERCIAL\nTugó × 30X — Formación IA por Áreas\n${date}\n\n`
-  text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
-  text += `RESUMEN\n${doneAreas.length} área${doneAreas.length > 1 ? 's' : ''} revisada${doneAreas.length > 1 ? 's' : ''} · `
-  text += `${doneAreas.reduce((acc, s) => acc + (areaStates[s.area.id]?.extract?.cupos ?? 0), 0)} cupos totales\n`
-  text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
-
-  for (const section of doneAreas) {
-    const state = areaStates[section.area.id]
-    const ext = state.extract!
-    const subtotal = ext.cupos * ext.precioUSD
-
-    text += `${section.area.emoji} ${section.area.nombre.toUpperCase()}\n`
-    text += `─────────────────────────────────────────────\n\n`
-    text += `${ext.hook}\n\n`
-    text += `${ext.problema}\n\n`
-    text += `PROGRAMA RECOMENDADO: ${ext.programaNombre}\n`
-    text += `${ext.programaJustificacion}\n\n`
-    text += `Cupos: ${ext.cupos}  ·  USD $${ext.precioUSD.toLocaleString()} por cupo  ·  Subtotal: USD $${subtotal.toLocaleString()}\n`
-    text += `COP ${(subtotal * TRM).toLocaleString('es-CO')} (sin IVA · TRM referencial $${TRM.toLocaleString()})\n\n\n`
-  }
-
-  // Investment table
-  text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`
-  text += `RESUMEN DE INVERSIÓN\n`
-  text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`
+  const programasUnicos = [...new Set(doneAreas.map(s => areaStates[s.area.id]!.extract!.programaNombre))]
+  const totalCupos = doneAreas.reduce((acc, s) => acc + (areaStates[s.area.id]?.extract?.cupos ?? 0), 0)
 
   const rows = doneAreas.map(s => {
     const ext = areaStates[s.area.id]!.extract!
-    return { area: s.area.nombre, programa: ext.programaNombre, cupos: ext.cupos, precio: ext.precioUSD, subtotal: ext.cupos * ext.precioUSD }
+    return { area: s.area.nombre, emoji: s.area.emoji, programa: ext.programaNombre, cupos: ext.cupos, precio: ext.precioUSD, subtotal: ext.cupos * ext.precioUSD }
   })
-
   const subtotalUSD = rows.reduce((a, r) => a + r.subtotal, 0)
   const ivaUSD = subtotalUSD * 0.19
   const totalUSD = subtotalUSD + ivaUSD
   const totalCOP = totalUSD * TRM
 
-  for (const r of rows) {
-    text += `${r.area.padEnd(28)} ${r.programa.padEnd(20)} ${String(r.cupos).padStart(5)} cupos  $${r.precio.toLocaleString().padStart(6)}/cupo  $${r.subtotal.toLocaleString().padStart(8)} USD\n`
+  const S = `\n` // spacer
+
+  let text = ''
+
+  // ── SLIDE: PORTADA ──────────────────────────────────────────
+  text += `╔══════════════════════════════════════════════════╗\n`
+  text += `  SLIDE: PORTADA\n`
+  text += `╚══════════════════════════════════════════════════╝\n`
+  text += `Cliente:    Tugó\n`
+  text += `Título:     Propuesta comercial\n`
+  text += `Programas:  ${programasUnicos.join(' & ')}\n`
+  text += `Fecha:      ${date}\n`
+  text += S
+
+  // ── SLIDE: APERTURA (gancho global) ─────────────────────────
+  text += `╔══════════════════════════════════════════════════╗\n`
+  text += `  SLIDE: APERTURA — GANCHO GLOBAL\n`
+  text += `╚══════════════════════════════════════════════════╝\n`
+  text += `Título:    ${programasUnicos.length > 1 ? `${programasUnicos.length} capacidades, un equipo` : `Una capacidad, un equipo`}\n`
+  text += `Subtítulo: Tugó tiene ${totalCupos} personas listas para liderar la transformación IA.\n`
+  text += `           ${programasUnicos.join(' y ')} ${programasUnicos.length > 1 ? 'son' : 'es'} el camino.\n`
+  text += S
+
+  // ── POR ÁREA ────────────────────────────────────────────────
+  for (const section of doneAreas) {
+    const ext = areaStates[section.area.id]!.extract!
+    const subtotal = ext.cupos * ext.precioUSD
+
+    text += `\n╔══════════════════════════════════════════════════╗\n`
+    text += `  ÁREA: ${section.area.emoji} ${section.area.nombre.toUpperCase()}\n`
+    text += `╚══════════════════════════════════════════════════╝\n`
+
+    text += `┌─ SLIDE: HOOK ─────────────────────────────────────\n`
+    text += `│  ${ext.hook}\n`
+    text += `└───────────────────────────────────────────────────\n`
+    text += S
+
+    text += `┌─ SLIDE: PROBLEMA ─────────────────────────────────\n`
+    text += `│  ${ext.problema}\n`
+    text += `└───────────────────────────────────────────────────\n`
+    text += S
+
+    text += `┌─ SLIDE: PROGRAMA RECOMENDADO ─────────────────────\n`
+    text += `│  Programa:      ${ext.programaNombre}\n`
+    text += `│  Justificación: ${ext.programaJustificacion}\n`
+    text += `└───────────────────────────────────────────────────\n`
+    text += S
+
+    text += `┌─ SLIDE: INVERSIÓN ${section.area.nombre.toUpperCase()} ───────────────────────\n`
+    text += `│  Cupos:         ${ext.cupos}\n`
+    text += `│  USD por cupo:  $${ext.precioUSD.toLocaleString()}\n`
+    text += `│  Subtotal USD:  $${subtotal.toLocaleString()}\n`
+    text += `│  Subtotal COP*: $${(subtotal * TRM).toLocaleString('es-CO')}\n`
+    text += `└───────────────────────────────────────────────────\n`
+    text += S
   }
 
+  // ── SLIDE: TABLA FINAL DE INVERSIÓN ─────────────────────────
+  text += `\n╔══════════════════════════════════════════════════╗\n`
+  text += `  SLIDE: TABLA FINAL DE INVERSIÓN\n`
+  text += `╚══════════════════════════════════════════════════╝\n`
+  for (const r of rows) {
+    text += `${r.emoji} ${r.area.padEnd(24)} | ${r.programa.padEnd(20)} | ${String(r.cupos).padStart(3)} cupos | $${r.precio.toLocaleString().padStart(6)}/cupo | $${r.subtotal.toLocaleString().padStart(8)} USD\n`
+  }
   text += `\n`
-  text += `Subtotal                                              $${subtotalUSD.toLocaleString()} USD\n`
-  text += `IVA 19%                                               $${Math.round(ivaUSD).toLocaleString()} USD\n`
-  text += `TOTAL                                                 $${Math.round(totalUSD).toLocaleString()} USD\n`
-  text += `                                         $${Math.round(totalCOP).toLocaleString('es-CO')} COP*\n\n`
-  text += `* COP calculado a TRM referencial de $${TRM.toLocaleString()} por USD.\n`
-  text += `  Valor final se ajusta a la TRM del día de emisión de la factura.\n\n`
-  text += `CONDICIONES\n`
+  text += `Subtotal                                    $${subtotalUSD.toLocaleString()} USD\n`
+  text += `IVA 19%                                     $${Math.round(ivaUSD).toLocaleString()} USD\n`
+  text += `TOTAL                                       $${Math.round(totalUSD).toLocaleString()} USD\n`
+  text += `                            $${Math.round(totalCOP).toLocaleString('es-CO')} COP*\n`
+  text += S
+
+  // ── SLIDE: CONDICIONES ───────────────────────────────────────
+  text += `╔══════════════════════════════════════════════════╗\n`
+  text += `  SLIDE: CONDICIONES\n`
+  text += `╚══════════════════════════════════════════════════╝\n`
   text += `• Precios en USD más IVA del 19%\n`
   text += `• Pago por transferencia bancaria\n`
   text += `• Hasta 2 cuotas con tarjeta corporativa\n`
   text += `• Tugó asigna libremente los cupos entre las áreas seleccionadas\n`
+  text += `• *COP calculado a TRM referencial de $${TRM.toLocaleString()} por USD.\n`
+  text += `   Valor final se ajusta a la TRM del día de emisión de la factura.\n`
 
   return text
 }
