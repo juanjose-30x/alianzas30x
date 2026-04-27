@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
   const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
-  const prompt = `Eres un analista de ventas B2B de 30X Escuela de Negocios. Analiza este transcript de discovery call con "${empresa}" y extrae información estructurada para preparar el diagnóstico de IA.
+  const prompt = `Eres un analista de ventas B2B de 30X Escuela de Negocios. Analiza este transcript de discovery call con "${empresa}" y extrae información estructurada.
 
 IDs DE ÁREAS DISPONIBLES EN 30X (usa solo estos):
 ${AREA_IDS}
@@ -39,11 +39,17 @@ Devuelve ÚNICAMENTE un JSON válido con esta estructura exacta (sin markdown):
   ],
   "senales_presupuesto": "desconocido",
   "contexto_empresa": "Párrafo breve describiendo la empresa y su situación actual",
-  "notas_adicionales": "Cualquier dato relevante que no encaje en los campos anteriores"
+  "notas_adicionales": "Cualquier dato relevante que no encaje en los campos anteriores",
+  "tema_engagement": "ventas_ai",
+  "intel_por_area": {
+    "ventas": "Contexto clave del área ventas mencionado en la reunión — procesos actuales, dolores específicos, nivel de madurez IA, personas clave"
+  }
 }
 
 Para "rol" de decision_makers usa solo: "champion", "sponsor", "blocker", "influencer".
 Para "senales_presupuesto" usa solo: "alto", "medio", "bajo", "desconocido".
+Para "tema_engagement": identifica el tema central de la alianza. Puede ser: "ventas_ai", "marketing_ai", "liderazgo_ai", "soft_skills", "operaciones_ai", "datos_ai", "general_ai". Elige el que mejor refleje de qué se habló.
+Para "intel_por_area": incluye SOLO las áreas identificadas. Por cada área escribe 2-3 oraciones con lo más relevante mencionado en la reunión — qué procesos tienen, qué dolores expresaron, quién está involucrado, su nivel actual con IA. Esta info alimentará el chat de diagnóstico para hacer preguntas más inteligentes.
 Si el transcript no menciona algo, deja el campo vacío o en su valor por defecto.`
 
   const { text } = await generateText({

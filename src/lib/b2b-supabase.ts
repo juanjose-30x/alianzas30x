@@ -14,13 +14,25 @@ export async function getAllLeads(): Promise<(Lead & { submissions_count: number
   const supabase = getServiceClient()
   const { data, error } = await supabase
     .from('leads')
-    .select('*, lead_submissions(count)')
+    .select('*')
     .order('updated_at', { ascending: false })
   if (error) throw new Error(error.message)
-  return (data ?? []).map(d => ({
-    ...d,
-    submissions_count: d.lead_submissions?.[0]?.count ?? 0,
-  }))
+
+  const leads = (data ?? []) as Lead[]
+
+  // Get counts in a separate query to avoid FK dependency
+  const counts: Record<string, number> = {}
+  if (leads.length > 0) {
+    const { data: subs } = await supabase
+      .from('lead_submissions')
+      .select('lead_id')
+      .in('lead_id', leads.map(l => l.id))
+    for (const s of subs ?? []) {
+      counts[s.lead_id] = (counts[s.lead_id] ?? 0) + 1
+    }
+  }
+
+  return leads.map(l => ({ ...l, submissions_count: counts[l.id] ?? 0 }))
 }
 
 export async function getLeadBySlug(slug: string): Promise<Lead | null> {

@@ -4,6 +4,11 @@ import PipelineClient from './PipelineClient'
 export const dynamic = 'force-dynamic'
 
 export default async function PipelinePage() {
-  const leads = await getAllLeads()
+  let leads: Awaited<ReturnType<typeof getAllLeads>> = []
+  try {
+    leads = await getAllLeads()
+  } catch (e) {
+    console.error('[Pipeline] Error loading leads:', e)
+  }
   return <PipelineClient leads={leads} />
 }

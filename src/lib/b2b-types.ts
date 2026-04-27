@@ -37,6 +37,10 @@ export type DiscoveryData = {
   senales_presupuesto: 'alto' | 'medio' | 'bajo' | 'desconocido'
   contexto_empresa: string
   notas_adicionales: string
+  // Discovery enriquecido
+  tema_engagement?: string | null        // ej: "ventas_ai", "soft_skills", "liderazgo"
+  notas_ejecutivo?: string | null        // apuntes inferenciales del ejecutivo 30X
+  intel_por_area?: Record<string, string> // contexto específico por área extraído del transcript
 }
 
 export type DiagnosticoConfig = {
@@ -44,6 +48,7 @@ export type DiagnosticoConfig = {
   mensaje_bienvenida: string
   nombre_empresa_display: string
   deadline: string | null
+  client_token?: string | null
 }
 
 export type Lead = {
@@ -91,12 +96,12 @@ export type LeadSubmission = {
 }
 
 export const LEAD_STATUS_LABELS: Record<LeadStatus, { label: string; color: string }> = {
-  discovery:              { label: 'Discovery',           color: '#6B7280' },
-  diagnostico_enviado:    { label: 'Diagnóstico enviado', color: '#3B82F6' },
-  diagnostico_parcial:    { label: 'Diagnóstico parcial', color: '#F59E0B' },
-  diagnostico_completo:   { label: 'Diagnóstico listo',  color: '#8B5CF6' },
-  propuesta_lista:        { label: 'Propuesta lista',     color: '#E9FF7B' },
-  negociacion:            { label: 'En negociación',      color: '#F97316' },
-  cerrado_ganado:         { label: 'Cerrado ✓',           color: '#34D399' },
-  cerrado_perdido:        { label: 'Perdido',             color: '#EF4444' },
+  discovery:              { label: 'Discovery',           color: '#6b7280' },
+  diagnostico_enviado:    { label: 'Diagnóstico enviado', color: '#3b82f6' },
+  diagnostico_parcial:    { label: 'Diagnóstico parcial', color: '#d97706' },
+  diagnostico_completo:   { label: 'Diagnóstico listo',  color: '#7c3aed' },
+  propuesta_lista:        { label: 'Propuesta lista',     color: '#65a30d' },
+  negociacion:            { label: 'En negociación',      color: '#ea580c' },
+  cerrado_ganado:         { label: 'Cerrado',             color: '#16a34a' },
+  cerrado_perdido:        { label: 'Perdido',             color: '#dc2626' },
 }
