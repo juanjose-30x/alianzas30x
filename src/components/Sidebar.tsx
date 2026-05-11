@@ -2,12 +2,13 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { LayoutGrid, CalendarDays, Plus, LogOut, Send } from 'lucide-react'
+import { LayoutGrid, CalendarDays, Plus, LogOut, Send, ClipboardList } from 'lucide-react'
 
 const NAV = [
-  { href: '/pipeline',            icon: LayoutGrid,   label: 'Pipeline' },
-  { href: '/pipeline/calendario', icon: CalendarDays, label: 'Calendario' },
-  { href: '/pipeline/outreach',   icon: Send,         label: 'Outreach' },
+  { href: '/pipeline',                  icon: LayoutGrid,    label: 'Pipeline' },
+  { href: '/pipeline/calendario',       icon: CalendarDays,  label: 'Calendario' },
+  { href: '/pipeline/outreach',         icon: Send,          label: 'Outreach' },
+  { href: '/pipeline/diagnosticos',     icon: ClipboardList, label: 'Diagnósticos' },
 ]
 
 export function Sidebar() {
