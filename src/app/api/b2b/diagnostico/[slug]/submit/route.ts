@@ -10,8 +10,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const { areas, nombre, cargo, email, telefono, headcount, roles,
     herramientas, herramienta_otra, chat_transcript, retos_chips, retos_adicionales } = body
 
-  if (!areas?.length || !nombre || !cargo) {
-    return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
+  if (!Array.isArray(areas) || areas.length === 0 || !nombre || !cargo) {
+    return NextResponse.json({ error: 'Faltan campos requeridos: areas, nombre, cargo', code: 'missing_fields' }, { status: 400 })
+  }
+
+  const areasPermitidas = lead.diagnostico_config.areas_preseleccionadas
+  if (areasPermitidas.length > 0) {
+    const invalidas = areas.filter((a: string) => !areasPermitidas.includes(a))
+    if (invalidas.length > 0) {
+      return NextResponse.json({ error: `Áreas no permitidas: ${invalidas.join(', ')}`, code: 'invalid_areas' }, { status: 400 })
+    }
   }
 
   let submission

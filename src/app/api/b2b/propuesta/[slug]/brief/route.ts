@@ -11,6 +11,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   if (!lead) return NextResponse.json({ error: 'Lead no encontrado' }, { status: 404 })
 
   const { submissions, areaConversations } = await req.json()
+
+  if (!Array.isArray(submissions) || submissions.length === 0) {
+    return NextResponse.json({ error: 'Se requiere al menos un diagnóstico', code: 'no_submissions' }, { status: 400 })
+  }
+
   const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
   const empresa = lead.diagnostico_config.nombre_empresa_display || lead.empresa
 
@@ -76,10 +81,6 @@ Genera un brief de preparación para el ejecutivo de 30X, persona por persona. P
 ---
 
 Español directo, sin rodeos. Usa nombres, cargos y situaciones reales del diagnóstico.`
-
-  if (!submissions?.length) {
-    return NextResponse.json({ error: 'Se requiere al menos un diagnóstico', code: 'no_submissions' }, { status: 400 })
-  }
 
   let text: string
   try {

@@ -40,16 +40,23 @@ Devuelve ÚNICAMENTE un JSON válido con esta estructura exacta (sin markdown):
   "precioUSD": número del precio por cupo en USD (1950 para AI Sales, 1990 para Sales Machine, 1295 para Growth Rockstar, 3000 para AI for Executives, 1500 para Hardcore AI o Achievers)
 }`
 
-  const { text } = await generateText({
-    model: anthropic('claude-haiku-4-5-20251001'),
-    prompt,
-    maxOutputTokens: 600,
-  })
+  let text: string
+  try {
+    const result = await generateText({
+      model: anthropic('claude-haiku-4-5-20251001'),
+      prompt,
+      maxOutputTokens: 600,
+    })
+    text = result.text
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error al generar extracción'
+    return NextResponse.json({ error: msg, code: 'ai_error' }, { status: 502 })
+  }
 
   try {
-    const clean = text.replace(/```json|```/g, '').trim()
+    const clean = text.replace(/```json[\s\S]*?```|```/g, '').trim()
     return NextResponse.json(JSON.parse(clean))
   } catch {
-    return NextResponse.json({ error: 'parse_error', raw: text }, { status: 500 })
+    return NextResponse.json({ error: 'Respuesta IA no es JSON válido', code: 'parse_error', raw: text }, { status: 500 })
   }
 }

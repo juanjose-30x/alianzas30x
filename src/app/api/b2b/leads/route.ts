@@ -25,7 +25,11 @@ export async function POST(req: Request) {
     contacto_cargo, contacto_whatsapp, deal_value_usd, grain_transcript, discovery_data } = body
 
   if (!slug || !empresa) {
-    return NextResponse.json({ error: 'slug y empresa son requeridos' }, { status: 400 })
+    return NextResponse.json({ error: 'slug y empresa son requeridos', code: 'missing_fields' }, { status: 400 })
+  }
+
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    return NextResponse.json({ error: 'slug inválido: solo letras minúsculas, números y guiones', code: 'invalid_slug' }, { status: 400 })
   }
 
   const { data, error } = await db()

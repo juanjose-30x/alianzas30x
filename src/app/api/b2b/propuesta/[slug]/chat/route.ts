@@ -31,14 +31,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
   const intelArea = lead.discovery_data.intel_por_area?.[areaContext.nombre?.toLowerCase() ?? '']
   const notasEjecutivo = lead.discovery_data.notas_ejecutivo
 
-  const systemPrompt = `Eres un consultor senior de 30X Escuela de Negocios ayudando a preparar la propuesta de formación IA para el área de ${areaContext.nombre} en ${empresa} (${lead.industria ?? 'empresa'}, ${lead.pais ?? 'Latinoamérica'}).
+  const contextBlocks = [
+    diagnosis30x    ? `━━━ DIAGNÓSTICO 30X ━━━\n${diagnosis30x}` : '',
+    intelArea       ? `━━━ INTEL DEL ÁREA ${(areaContext.nombre ?? '').toUpperCase()} ━━━\n${intelArea}` : '',
+    notasEjecutivo  ? `━━━ NOTAS DEL EJECUTIVO ━━━\n${notasEjecutivo}` : '',
+  ].filter(Boolean).join('\n\n')
+
+  const systemPrompt = `Eres un consultor senior de 30X Escuela de Negocios ayudando a preparar la propuesta de formación IA para el área de ${areaContext.nombre ?? 'esta área'} en ${empresa} (${lead.industria ?? 'empresa'}, ${lead.pais ?? 'Latinoamérica'}).
 
 ━━━ CONTEXTO DE ${empresa.toUpperCase()} ━━━
-${lead.discovery_data.contexto_empresa || ''}
-Señales de presupuesto: ${lead.discovery_data.senales_presupuesto}
-${diagnosis30x ? `\n━━━ DIAGNÓSTICO 30X ━━━\n${diagnosis30x}` : ''}
-${intelArea ? `\n━━━ INTEL DEL ÁREA ${areaContext.nombre?.toUpperCase()} ━━━\n${intelArea}` : ''}
-${notasEjecutivo ? `\n━━━ NOTAS DEL EJECUTIVO ━━━\n${notasEjecutivo}` : ''}
+${lead.discovery_data?.contexto_empresa ?? ''}
+Señales de presupuesto: ${lead.discovery_data?.senales_presupuesto ?? 'desconocido'}
+${contextBlocks ? `\n${contextBlocks}` : ''}
 
 ━━━ DATOS DEL ÁREA: ${areaContext.emoji} ${areaContext.nombre} ━━━
 
