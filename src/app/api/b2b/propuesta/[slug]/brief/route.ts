@@ -77,11 +77,22 @@ Genera un brief de preparación para el ejecutivo de 30X, persona por persona. P
 
 Español directo, sin rodeos. Usa nombres, cargos y situaciones reales del diagnóstico.`
 
-  const { text } = await generateText({
-    model: anthropic('claude-sonnet-4-6'),
-    prompt,
-    maxOutputTokens: 4000,
-  })
+  if (!submissions?.length) {
+    return NextResponse.json({ error: 'Se requiere al menos un diagnóstico', code: 'no_submissions' }, { status: 400 })
+  }
+
+  let text: string
+  try {
+    const result = await generateText({
+      model: anthropic('claude-sonnet-4-6'),
+      prompt,
+      maxOutputTokens: 4000,
+    })
+    text = result.text
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error al generar el brief'
+    return NextResponse.json({ error: msg, code: 'ai_error' }, { status: 502 })
+  }
 
   return NextResponse.json({ brief: text })
 }

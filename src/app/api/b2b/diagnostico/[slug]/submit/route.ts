@@ -14,18 +14,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
     return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
   }
 
-  const submission = await createLeadSubmission(lead.id, {
-    areas, nombre, cargo, email, telefono,
-    headcount: headcount ?? 1,
-    roles: roles ?? [],
-    herramientas: herramientas ?? [],
-    herramienta_otra,
-    chat_transcript: chat_transcript ?? [],
-    retos_chips: retos_chips ?? [],
-    retos_adicionales,
-    insight: undefined,
-    insight_aprobado: false,
-  })
+  let submission
+  try {
+    submission = await createLeadSubmission(lead.id, {
+      areas, nombre, cargo, email, telefono,
+      headcount: headcount ?? 1,
+      roles: roles ?? [],
+      herramientas: herramientas ?? [],
+      herramienta_otra,
+      chat_transcript: chat_transcript ?? [],
+      retos_chips: retos_chips ?? [],
+      retos_adicionales,
+      insight: undefined,
+      insight_aprobado: false,
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error al guardar el diagnóstico'
+    return NextResponse.json({ error: msg, code: 'db_error' }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true, id: submission.id })
 }

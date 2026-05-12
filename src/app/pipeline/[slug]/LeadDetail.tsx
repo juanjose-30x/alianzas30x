@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, X, AlertTriangle, Pencil, Check, Link, RefreshCw, Copy } from 'lucide-react'
+import { CheckCircle2, X, AlertTriangle, Pencil, Check, Link, RefreshCw, Copy, ExternalLink, Send } from 'lucide-react'
 import type { Lead, LeadSubmission, LeadStatus } from '@/lib/b2b-types'
 import { listContainer, listItem } from '@/lib/motion'
 import { LeadHeader }         from './LeadHeader'
@@ -108,6 +108,22 @@ export default function LeadDetail({ lead, submissions }: { lead: Lead; submissi
     await forceChangeStatus(status)
   }
 
+  const [copiedDiagLink, setCopiedDiagLink] = useState(false)
+
+  const copyDiagLink = useCallback(() => {
+    const url = `${window.location.origin}/${lead.slug}/diagnostico`
+    navigator.clipboard.writeText(url)
+    setCopiedDiagLink(true)
+    setTimeout(() => setCopiedDiagLink(false), 2000)
+  }, [lead.slug])
+
+  const sendDiagnostico = useCallback(async () => {
+    copyDiagLink()
+    if (!['diagnostico_enviado', 'diagnostico_parcial', 'diagnostico_completo', 'propuesta_lista', 'negociacion', 'cerrado_ganado'].includes(currentStatus)) {
+      await forceChangeStatus('diagnostico_enviado')
+    }
+  }, [copyDiagLink, currentStatus, forceChangeStatus])
+
   const saveContext = async () => {
     setSavingContext(true)
     try {
@@ -177,7 +193,64 @@ export default function LeadDetail({ lead, submissions }: { lead: Lead; submissi
 
         {/* DIAGNÓSTICOS */}
         <section style={{ paddingTop: '3rem', paddingBottom: '3rem', borderBottom: '1px solid var(--br)' }}>
-          <p className="label-caps" style={{ marginBottom: '1.5rem' }}>Diagnósticos recibidos</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+            <p className="label-caps">Diagnósticos recibidos</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {currentStatus === 'diagnostico_completo' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <CheckCircle2 size={12} color="#15803d" strokeWidth={2.5} />
+                  <span style={{ fontSize: 11, color: '#15803d', fontWeight: 600, letterSpacing: '-0.01em' }}>Completado</span>
+                  <a
+                    href={`/${lead.slug}/diagnostico`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      marginLeft: 6, padding: '4px 10px', borderRadius: 6,
+                      fontSize: 11, color: 'var(--t-subtle)', textDecoration: 'none',
+                      border: '1px solid var(--br)', background: 'none',
+                      transition: 'border-color 130ms ease, color 130ms ease',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--br-mid)'; e.currentTarget.style.color = 'var(--fg)' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--br)'; e.currentTarget.style.color = 'var(--t-subtle)' }}
+                  >
+                    Ver reporte <ExternalLink size={10} strokeWidth={2} />
+                  </a>
+                </div>
+              )}
+              {['diagnostico_enviado', 'diagnostico_parcial'].includes(currentStatus) && (
+                <span style={{
+                  fontSize: 11, color: '#1d4ed8', fontWeight: 500,
+                  background: 'rgba(29,78,216,0.07)', border: '1px solid rgba(29,78,216,0.18)',
+                  borderRadius: 5, padding: '3px 9px', letterSpacing: '-0.01em',
+                }}>
+                  Enviado
+                </span>
+              )}
+              <button
+                onClick={sendDiagnostico}
+                disabled={updatingStatus}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '5px 12px', borderRadius: 6, fontSize: 11,
+                  background: copiedDiagLink ? 'rgba(21,128,61,0.07)' : 'none',
+                  border: `1px solid ${copiedDiagLink ? 'rgba(21,128,61,0.25)' : 'var(--br)'}`,
+                  cursor: 'pointer',
+                  color: copiedDiagLink ? '#15803d' : 'var(--t-faint)',
+                  fontFamily: 'var(--font-geist), system-ui',
+                  opacity: updatingStatus ? 0.5 : 1,
+                  transition: 'all 150ms ease',
+                }}
+                onMouseEnter={e => { if (!copiedDiagLink) { e.currentTarget.style.borderColor = 'var(--br-mid)'; e.currentTarget.style.color = 'var(--t-subtle)' } }}
+                onMouseLeave={e => { if (!copiedDiagLink) { e.currentTarget.style.borderColor = 'var(--br)'; e.currentTarget.style.color = 'var(--t-faint)' } }}
+              >
+                {copiedDiagLink
+                  ? <><Check size={10} strokeWidth={2.5} /> Link copiado</>
+                  : <><Send size={10} strokeWidth={2} /> Enviar diagnóstico</>
+                }
+              </button>
+            </div>
+          </div>
           <LeadSubmissionList
             lead={lead}
             submissions={submissions}

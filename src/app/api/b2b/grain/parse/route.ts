@@ -52,17 +52,24 @@ Para "tema_engagement": identifica el tema central de la alianza. Puede ser: "ve
 Para "intel_por_area": incluye SOLO las áreas identificadas. Por cada área escribe 2-3 oraciones con lo más relevante mencionado en la reunión — qué procesos tienen, qué dolores expresaron, quién está involucrado, su nivel actual con IA. Esta info alimentará el chat de diagnóstico para hacer preguntas más inteligentes.
 Si el transcript no menciona algo, deja el campo vacío o en su valor por defecto.`
 
-  const { text } = await generateText({
-    model: anthropic('claude-sonnet-4-6'),
-    prompt,
-    maxOutputTokens: 1500,
-  })
+  let text: string
+  try {
+    const result = await generateText({
+      model: anthropic('claude-sonnet-4-6'),
+      prompt,
+      maxOutputTokens: 1500,
+    })
+    text = result.text
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Error al llamar a la IA'
+    return NextResponse.json({ error: msg, code: 'ai_error' }, { status: 502 })
+  }
 
   try {
     const clean = text.replace(/```json|```/g, '').trim()
     const parsed = JSON.parse(clean)
     return NextResponse.json(parsed)
   } catch {
-    return NextResponse.json({ error: 'parse_error', raw: text }, { status: 500 })
+    return NextResponse.json({ error: 'Respuesta IA no es JSON válido', code: 'parse_error', raw: text }, { status: 500 })
   }
 }

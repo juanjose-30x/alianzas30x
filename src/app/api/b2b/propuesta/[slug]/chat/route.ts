@@ -27,11 +27,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ slug: s
     ? areaContext.quotes.map((q: string, i: number) => `${i + 1}. "${q}"`).join('\n')
     : 'Sin citas disponibles.'
 
+  const diagnosis30x = lead.discovery_data.diagnosis_30x
+  const intelArea = lead.discovery_data.intel_por_area?.[areaContext.nombre?.toLowerCase() ?? '']
+  const notasEjecutivo = lead.discovery_data.notas_ejecutivo
+
   const systemPrompt = `Eres un consultor senior de 30X Escuela de Negocios ayudando a preparar la propuesta de formación IA para el área de ${areaContext.nombre} en ${empresa} (${lead.industria ?? 'empresa'}, ${lead.pais ?? 'Latinoamérica'}).
 
 ━━━ CONTEXTO DE ${empresa.toUpperCase()} ━━━
 ${lead.discovery_data.contexto_empresa || ''}
 Señales de presupuesto: ${lead.discovery_data.senales_presupuesto}
+${diagnosis30x ? `\n━━━ DIAGNÓSTICO 30X ━━━\n${diagnosis30x}` : ''}
+${intelArea ? `\n━━━ INTEL DEL ÁREA ${areaContext.nombre?.toUpperCase()} ━━━\n${intelArea}` : ''}
+${notasEjecutivo ? `\n━━━ NOTAS DEL EJECUTIVO ━━━\n${notasEjecutivo}` : ''}
 
 ━━━ DATOS DEL ÁREA: ${areaContext.emoji} ${areaContext.nombre} ━━━
 

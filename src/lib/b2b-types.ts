@@ -41,6 +41,7 @@ export type DiscoveryData = {
   tema_engagement?: string | null        // ej: "ventas_ai", "soft_skills", "liderazgo"
   notas_ejecutivo?: string | null        // apuntes inferenciales del ejecutivo 30X
   intel_por_area?: Record<string, string> // contexto específico por área extraído del transcript
+  diagnosis_30x?: string | null          // resumen del diagnóstico: causa raíz, objetivo, señales clave
 }
 
 export type DiagnosticoConfig = {
